@@ -1,0 +1,26 @@
+# Ignorar modelos BLIP
+backend/models/
+
+# Ignorar entorno virtual de Python
+backend/venv/
+
+# Archivos de caché de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos de configuración locales
+*.env
+*.DS_Store
+
+# Archivos de logs
+*.log
+
+# Archivos de compilación frontend
+frontend/node_modules/
+frontend/dist/
+
+# Otros temporales
+*.swp
+*.swo
