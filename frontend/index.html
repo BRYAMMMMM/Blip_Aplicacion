@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Generador de Descripciones BLIP</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+<h1>Generador de Descripciones BLIP</h1>
+<form id="upload-form">
+<input type="file" id="image" name="file" accept="image/*" required>
+<select name="model_name" id="model"></select>
+<button type="submit">Generar Descripción</button>
+</form>
+<div class="preview">
+<img id="preview-img" src="" alt="Vista previa de la imagen" />
+</div>
+<div class="result">
+<h3>Descripción generada:</h3>
+<p id="result-text"></p>
+</div>
+</div>
+<script>
+async function loadModels() {
+const select = document.getElementById("model");
+try {
+const response = await fetch("http://127.0.0.1:8000/models");
+const data = await response.json();
+data.models.forEach(model => {
+const option = document.createElement("option");
+option.value = model;
+option.textContent = model === "blip1" ? "BLIP Español 1" : "BLIP Español 2";
+select.appendChild(option);
+});
+} catch (error) {
+console.error("Error cargando modelos:", error);
+}
+}
+loadModels();
+document.getElementById("image").addEventListener("change", function() {
+const file = this.files[0];
+const preview = document.getElementById("preview-img");
+if (file) {
+const reader = new FileReader();
+reader.onload = function(e) {
+preview.src = e.target.result;
+}
+reader.readAsDataURL(file);
+} else {
+preview.src = "";
+}
+});
+document.getElementById("upload-form").addEventListener("submit", async (e) => {
+e.preventDefault();
+document.getElementById("result-text").innerText = "Generando descripción...";
+const formData = new FormData();
+formData.append("file", document.getElementById("image").files[0]);
+formData.append("model_name", document.getElementById("model").value);
+try {
+const response = await fetch("http://127.0.0.1:8000/generate_caption/", {
+method: "POST",
+body: formData
+});
+const data = await response.json();
+document.getElementById("result-text").innerText = data.caption || data.error;
+} catch (error) {
+document.getElementById("result-text").innerText = "Error al generar la descripción.";
+console.error(error);
+}
+});
+</script>
+</body>
+</html>
