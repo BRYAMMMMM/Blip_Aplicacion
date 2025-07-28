@@ -1,6 +1,6 @@
 from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
-from transformers import BlipProcessor, BlipForConditionalGeneration
+from transformers import Blip2Processor, Blip2ForConditionalGeneration
 from PIL import Image
 import torch
 from io import BytesIO
@@ -21,13 +21,13 @@ MODEL_1_PATH = BASE_DIR / "models" / "blip_model_1"
 MODEL_2_PATH = BASE_DIR / "models" / "blip_model_2"
 
 models = {
-    "blip1": BlipForConditionalGeneration.from_pretrained(str(MODEL_1_PATH)),
-    "blip2": BlipForConditionalGeneration.from_pretrained(str(MODEL_2_PATH))
+    "blip1": Blip2ForConditionalGeneration.from_pretrained(str(MODEL_1_PATH)),
+    "blip2": Blip2ForConditionalGeneration.from_pretrained(str(MODEL_2_PATH))
 }
 
 processors = {
-    "blip1": BlipProcessor.from_pretrained(str(MODEL_1_PATH)),
-    "blip2": BlipProcessor.from_pretrained(str(MODEL_2_PATH))
+    "blip1": Blip2Processor.from_pretrained(str(MODEL_1_PATH)),
+    "blip2": Blip2Processor.from_pretrained(str(MODEL_2_PATH))
 }
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -48,12 +48,13 @@ async def generate_caption(model_name: str = Form(...), file: UploadFile = File(
     model = models[model_name]
 
     inputs = processor(images=image, return_tensors="pt").to(DEVICE)
-    out = model.generate(
-        **inputs,
-        max_new_tokens=300,
-        num_beams=5,
-        repetition_penalty=1.2
-    )
+    with torch.no_grad():
+        out = model.generate(
+            **inputs,
+            max_new_tokens=300,
+            num_beams=5,
+            repetition_penalty=1.2
+        )
     caption = processor.decode(out[0], skip_special_tokens=True)
 
     return {"caption": caption}
